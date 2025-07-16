@@ -1,0 +1,14 @@
+classDiagram
+    class Document {
+      +int Id
+      +string FileName
+      +DateTime DateImported
+    }
+    class Fonctionnaire {
+      +int Id
+      +string Nom
+      +string Prenom
+      +string Grade
+      +Date DateRecrutement
+    }
+    Document "1" -- "0..*" Fonctionnaire : contient
