@@ -67,9 +67,8 @@ export class TableListComponent implements OnInit {
   applyFilter() {
     if (!this.searchTerm.trim()) {
       this.filteredFonctionnaires = [...this.fonctionnaires]
-      return
+      return;
     }
-
     const term = this.searchTerm.toLowerCase().trim()
     this.filteredFonctionnaires = this.fonctionnaires.filter(
       (f) =>
@@ -79,6 +78,7 @@ export class TableListComponent implements OnInit {
     )
   }
 
+      
   clearFilter() {
     this.searchTerm = ""
     this.filteredFonctionnaires = [...this.fonctionnaires]
