@@ -22,7 +22,7 @@ namespace DigitalLabControlAPI.Controllers
         [HttpPost("login")]
         public IActionResult Login([FromBody] User login)
         {
-            var user = _userService.Authenticate(login.email, login.Password);
+            var user = _userService.Authenticate(login.Email, login.Password);
             if (user == null)
                 return Unauthorized();
 
@@ -32,7 +32,8 @@ namespace DigitalLabControlAPI.Controllers
             var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = new System.Security.Claims.ClaimsIdentity(new[] {
-                new System.Security.Claims.Claim("id", user.Id.ToString())
+                new System.Security.Claims.Claim("id", user.Id.ToString()),
+                new System.Security.Claims.Claim("username", user.Username)  
             }),
                 Expires = DateTime.UtcNow.AddHours(1),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
@@ -41,7 +42,7 @@ namespace DigitalLabControlAPI.Controllers
             var token = tokenHandler.CreateToken(tokenDescriptor);
             var jwt = tokenHandler.WriteToken(token);
 
-            return Ok(new { token = jwt });
+            return Ok(new { token = jwt, username = user.Username, email = user.Email });
         }
     }
 }

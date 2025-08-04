@@ -4,19 +4,19 @@ namespace DigitalLabControlAPI.Services
 {
     public interface IUserService
     {
-        User? Authenticate(string username, string password);
+        User? Authenticate( string email, string password);
     }
 
     public class UserService : IUserService
     {
         private List<User> _users = new()
     {
-        new User { Id = 1, email = "zakaria@gmail.com", Password = "zakaria" },
+        new User { Id = 1, Username = "ZakariaAz" , Email = "zakaria@gmail.com", Password = "zakaria" },
     };
 
-        public User? Authenticate(string username, string password)
+        public User? Authenticate(string email, string password)
         {
-            return _users.FirstOrDefault(u => u.email == username && u.Password == password);
+            return _users.FirstOrDefault(u => u.Email == email && u.Password == password);
         }
     }
 }
