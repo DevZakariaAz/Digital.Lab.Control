@@ -13,7 +13,7 @@ export class LoginComponent implements OnInit {
   password: string = '';
 
   fallbackUsers = [
-    { email: 'admin@gmail.com', password: 'admin', role: 'admin' },
+    { email: 'adminfake@gmail.com', password: 'admin', role: 'admin' },
     { email: 'user@example.com', password: 'user123', role: 'user' }
   ];
 
@@ -21,29 +21,38 @@ export class LoginComponent implements OnInit {
 
   ngOnInit(): void {}
 
-  onLogin() {
-    const payload = { email: this.email, password: this.password };
+onLogin() {
+  const payload = { email: this.email, password: this.password };
 
-    // Try to send to backend first
-    this.http.post<any>('http://Labo/login', payload).subscribe({
-      next: (response) => {
-        console.log('Logged in from API:', response);
+  this.http.post<any>('http://localhost:5019/api/auth/login', payload).subscribe({
+    next: (response) => {
+      console.log('Logged in from API:', response);
+
+      // Store token for future requests
+      localStorage.setItem('token', response.token);
+
+      // Navigate to dashboard
+      this.router.navigate(['/dashboard']);
+    },
+    error: (err) => {
+      console.warn('Backend not ready or failed, using fallback login...');
+
+      const foundUser = this.fallbackUsers.find(user =>
+        user.email === this.email && user.password === this.password
+      );
+
+      if (foundUser) {
+        console.log(`Login successful (local): Welcome ${foundUser.role}`);
+
+        // Optionally store a fake token or role locally here if needed
+        localStorage.setItem('token', 'fake-jwt-token'); // just an example
+
         this.router.navigate(['/dashboard']);
-      },
-      error: (err) => {
-        console.warn('Backend not ready or failed, using fallback login...');
-
-        const foundUser = this.fallbackUsers.find(user =>
-          user.email === this.email && user.password === this.password
-        );
-
-        if (foundUser) {
-          console.log(`Login successful (local): Welcome ${foundUser.role}`);
-          this.router.navigate(['/dashboard']);
-        } else {
-          console.error('Login failed (local): Invalid credentials');
-        }
+      } else {
+        console.error('Login failed (local): Invalid credentials');
+        alert('Invalid credentials');
       }
-    });
-  }
+    }
+  });
+}
 }

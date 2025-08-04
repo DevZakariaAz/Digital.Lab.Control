@@ -3,9 +3,10 @@ import { Routes } from '@angular/router';
 import { DashboardComponent } from '../../dashboard/dashboard.component';
 import { UserProfileComponent } from '../../user-profile/user-profile.component';
 import { TableListComponent } from '../../table-list/table-list.component';
+import { AuthGuard } from '../../auth.guard';
 
 export const AdminLayoutRoutes: Routes = [
-    { path: 'dashboard', component: DashboardComponent },
-    { path: 'user-profile',   component: UserProfileComponent },
-    { path: 'table-list',     component: TableListComponent },
+    { path: 'dashboard', component: DashboardComponent ,canActivate: [AuthGuard] },
+    { path: 'user-profile',   component: UserProfileComponent ,canActivate: [AuthGuard] },
+    { path: 'table-list',     component: TableListComponent ,canActivate: [AuthGuard] },
 ];
