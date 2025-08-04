@@ -56,7 +56,7 @@ app.UseSwaggerUI();
 
 app.UseCors("AllowAngularClient");
 
-app.UseAuthentication(); // DOIT être AVANT Authorization
+app.UseAuthentication(); 
 app.UseAuthorization();
 
 app.MapControllers();

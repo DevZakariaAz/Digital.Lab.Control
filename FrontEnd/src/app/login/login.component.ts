@@ -25,7 +25,7 @@ export class LoginComponent implements OnInit {
     const payload = { email: this.email, password: this.password };
 
     // Try to send to backend first
-    this.http.post<any>('http://Labo/login', payload).subscribe({
+    this.http.post<any>('http://localhost:5019/api/auth/login', payload).subscribe({
       next: (response) => {
         console.log('Logged in from API:', response);
         this.router.navigate(['/dashboard']);
