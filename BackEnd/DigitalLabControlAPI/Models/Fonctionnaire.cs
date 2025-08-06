@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text.Json.Serialization;
 
 namespace DigitalLabControlAPI.Models
 {
@@ -11,6 +12,5 @@ namespace DigitalLabControlAPI.Models
         public DateTime DateRecrutement { get; set; }
 
         public int DocumentId { get; set; }
-        public Document Document { get; set; }
     }
 }
