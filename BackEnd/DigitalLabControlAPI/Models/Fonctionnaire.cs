@@ -12,5 +12,7 @@ namespace DigitalLabControlAPI.Models
         public DateTime DateRecrutement { get; set; }
 
         public int DocumentId { get; set; }
+        [JsonIgnore]
+        public Document Document { get; set; }
     }
 }

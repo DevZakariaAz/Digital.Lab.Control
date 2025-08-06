@@ -377,9 +377,15 @@ this.http.post("http://localhost:5019/api/fonctionnaires/bulk", importedData)
     error: (err) => {
       console.error("Import error details:", err.error);
       if (err.error && err.error.errors) {
-        const validationMessages = Object.entries(err.error.errors)
-          .map(([field, messages]) => `${field}: ${(messages as string[]).join(', ')}`)
-          .join('\n');
+const validationMessages = Object.entries(err.error.errors)
+  .map(([field, messages]) => {
+    if (Array.isArray(messages)) {
+      return `${field}: ${messages.join(', ')}`;
+    } else {
+      return `${field}: ${messages}`;
+    }
+  })
+  .join('\n');
         this.showErrorToast("Erreur de validation", validationMessages);
       } else {
         this.showErrorToast("Erreur", "Impossible d'importer les données.");
