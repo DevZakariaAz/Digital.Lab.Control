@@ -45,23 +45,30 @@ export class TableListComponent implements OnInit {
     this.loadData()
   }
 
-  loadData() {
-    this.http.get<any[]>("http://digital-lab-control-api/fonctionnaires").subscribe({
-      next: (data) => {
-        this.fonctionnaires = data.map((f) => ({
-          ...f,
-          dateRecrutement: new Date(f.dateRecrutement),
-        }))
-        this.filteredFonctionnaires = [...this.fonctionnaires]
-        console.log("✅ Données chargées depuis l'API", this.fonctionnaires)
-      },
-      error: (error) => {
-        console.warn("⚠️ Échec de chargement de l'API, utilisation de données locales")
-        this.fonctionnaires = this.fakeData
-        this.filteredFonctionnaires = [...this.fonctionnaires]
-      },
-    })
-  }
+loadData() {
+  this.http.get<any>("http://localhost:5019/api/fonctionnaires").subscribe({
+    next: (response) => {
+      console.log("API response:", response)
+
+      // If response contains $values (common in .NET)
+      const data = response?.$values || []
+
+      this.fonctionnaires = data.map((f: any) => ({
+        ...f,
+        dateRecrutement: f.dateRecrutement ? new Date(f.dateRecrutement) : new Date(),
+      }))
+
+      this.filteredFonctionnaires = [...this.fonctionnaires]
+      console.log("✅ Données transformées:", this.fonctionnaires)
+    },
+    error: (error) => {
+      console.warn("⚠️ Échec de chargement de l'API, utilisation de données locales")
+      this.fonctionnaires = this.fakeData
+      this.filteredFonctionnaires = [...this.fonctionnaires]
+    },
+  })
+}
+
 
   // Méthodes de filtrage
   applyFilter() {
@@ -293,66 +300,92 @@ export class TableListComponent implements OnInit {
     window.URL.revokeObjectURL(url)
   }
 
-  // Méthodes d'import (inchangées)
-  triggerFileInput() {
-    this.fileInput.nativeElement.click()
-  }
+// Méthodes d'import (corrigées)
+triggerFileInput() {
+  this.fileInput.nativeElement.click();
+}
 
-  onFileSelected(event: any) {
-    const file = event.target.files[0]
-    if (!file) return
+onFileSelected(event: any) {
+  const file = event.target.files[0];
+  if (!file) return;
 
-    const reader = new FileReader()
-    reader.onload = (e: any) => {
-      try {
-        if (file.name.endsWith(".json")) {
-          this.importFromJSON(e.target.result)
-        } else if (file.name.endsWith(".csv")) {
-          this.importFromCSV(e.target.result)
-        } else {
-          this.showErrorToast("Format non supporté", "Utilisez des fichiers JSON ou CSV.")
-        }
-      } catch (error) {
-        console.error("Erreur lors de l'import:", error)
-        this.showErrorToast("Erreur d'import", "Erreur lors de l'import du fichier.")
+  const reader = new FileReader();
+  reader.onload = (e: any) => {
+    try {
+      if (file.name.endsWith(".json")) {
+        this.importFromJSON(e.target.result);
+      } else if (file.name.endsWith(".csv")) {
+        this.importFromCSV(e.target.result);
+      } else {
+        this.showErrorToast("Format non supporté", "Utilisez des fichiers JSON ou CSV.");
+      }
+    } catch (error) {
+      console.error("Erreur lors de l'import:", error);
+      this.showErrorToast("Erreur d'import", "Erreur lors de l'import du fichier.");
+    }
+  };
+  reader.readAsText(file);
+}
+
+private importFromCSV(content: string) {
+  const lines = content.split("\n");
+  const importedData = lines
+    .slice(1) // sauter l'entête
+    .filter(line => line.trim())
+    .map(line => {
+      const [nom, prenom, grade, dateStr] = line.split(",").map(v => v.replace(/"/g, "").trim());
+      return {
+        nom,
+        prenom,
+        grade,
+        dateRecrutement: dateStr,
+        documentId: 1 // valeur par défaut côté backend
+      };
+    });
+
+  this.http.post("http://localhost:5019/api/fonctionnaires/bulk", importedData)
+    .subscribe({
+      next: () => {
+        this.showSuccessToast("Import réussi", `${importedData.length} fonctionnaire(s) ajoutés.`);
+        this.loadData(); // recharger les données
+      },
+      error: (err) => {
+        console.error("Import CSV error", err);
+        this.showErrorToast("Erreur", "Impossible d'importer les données CSV.");
+      }
+    });
+}
+
+private importFromJSON(content: string) {
+  const data = JSON.parse(content);
+  if (Array.isArray(data)) {
+    const importedData = data.map(item => ({
+      Id: item.Id || 0, // optional, usually backend assigns this
+      Nom: item.nom || item.Nom || "",            // string
+      Prenom: item.prenom || item.Prenom || "",    // string
+      Grade: item.grade || item.Grade || "",       // string
+      DateRecrutement: new Date(item.dateRecrutement || item.DateRecrutement).toISOString(), // ISO string
+      DocumentId: item.documentId && item.documentId !== 0 ? item.documentId : 1  // default to 1 if missing or 0
+    }));
+
+this.http.post("http://localhost:5019/api/fonctionnaires/bulk", importedData)
+  .subscribe({
+    next: () => {
+      this.showSuccessToast("Import réussi", `${importedData.length} fonctionnaire(s) ajoutés.`);
+      this.loadData();
+    },
+    error: (err) => {
+      console.error("Import error details:", err.error);
+      if (err.error && err.error.errors) {
+        const validationMessages = Object.entries(err.error.errors)
+          .map(([field, messages]) => `${field}: ${(messages as string[]).join(', ')}`)
+          .join('\n');
+        this.showErrorToast("Erreur de validation", validationMessages);
+      } else {
+        this.showErrorToast("Erreur", "Impossible d'importer les données.");
       }
     }
-    reader.readAsText(file)
+  });
   }
-
-  private importFromJSON(content: string) {
-    const data = JSON.parse(content)
-    if (Array.isArray(data)) {
-      const importedData = data.map((item) => ({
-        ...item,
-        dateRecrutement: new Date(item.dateRecrutement),
-      }))
-
-      this.fonctionnaires = [...this.fonctionnaires, ...importedData]
-      this.applyFilter()
-      this.showSuccessToast("Import réussi", `${importedData.length} enregistrement(s) importé(s) avec succès.`)
-    }
-  }
-
-  private importFromCSV(content: string) {
-    const lines = content.split("\n")
-    const headers = lines[0].split(",")
-
-    const importedData = lines
-      .slice(1)
-      .filter((line) => line.trim())
-      .map((line) => {
-        const values = line.split(",").map((v) => v.replace(/"/g, "").trim())
-        return {
-          nom: values[0] || "",
-          prenom: values[1] || "",
-          grade: values[2] || "",
-          dateRecrutement: new Date(values[3] || new Date()),
-        }
-      })
-
-    this.fonctionnaires = [...this.fonctionnaires, ...importedData]
-    this.applyFilter()
-    this.showSuccessToast("Import réussi", `${importedData.length} enregistrement(s) importé(s) avec succès.`)
-  }
+}
 }

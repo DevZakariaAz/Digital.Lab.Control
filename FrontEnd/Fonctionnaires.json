@@ -1,0 +1,16 @@
+[
+    {
+        "Nom": "El Mansouri",
+        "Prenom": "Amina",
+        "Grade": "Assistante RH",
+        "DateRecrutement": "2019-03-15T00:00:00Z",
+        "DocumentId": 1
+    },
+    {
+        "Nom": "Benali",
+        "Prenom": "Youssef",
+        "Grade": "Technicien",
+        "DateRecrutement": "2018-07-20T00:00:00Z",
+        "DocumentId": 2
+    }
+]
